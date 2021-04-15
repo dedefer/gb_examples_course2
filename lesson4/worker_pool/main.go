@@ -33,10 +33,13 @@ func main() {
 		}(i)
 	}
 
+	// заранее знаем сколько сообщений
 	msgCnt := 30
 
+	// считаем сколько послали в канал
 	sent := 0
 	resps := make([]Res, 0, msgCnt)
+	// посылаем и одновременно читаем до тех пор пока ВСЕ НЕ ПОШЛЕМ
 	for sent < msgCnt {
 		select {
 		case ch <- Msg{id: sent, data: sent * 100}:
@@ -47,11 +50,13 @@ func main() {
 	}
 	close(ch)
 
+	// дочитываем оставшиеся сообщения из канала результатов
 	for len(resps) < msgCnt {
 		res := <-resCh
 		resps = append(resps, res)
 	}
 
+	// сортируем по id
 	sort.Slice(resps, func(i, j int) bool {
 		return resps[i].id < resps[j].id
 	})
