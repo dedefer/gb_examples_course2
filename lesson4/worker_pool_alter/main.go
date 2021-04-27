@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"sort"
 )
@@ -63,4 +64,54 @@ func main() {
 		fmt.Println(res.res)
 	}
 
+}
+
+type Task = func()
+
+type WorkerMsg struct {
+	task    Task
+	resChan chan struct{}
+}
+
+type BatchWorkerPool struct {
+	workers int
+	msgChan chan WorkerMsg
+}
+
+// Эта штука создает воркер пул с {workers} воркеров
+func New(workers int) *BatchWorkerPool {
+	msgChan := make(chan WorkerMsg, workers)
+	for i := 0; i < workers; i++ {
+		go func() {
+			for msg := range msgChan {
+				msg.task()
+				msg.resChan <- struct{}{}
+			}
+		}()
+	}
+	return &BatchWorkerPool{
+		workers: workers,
+		msgChan: msgChan,
+	}
+}
+
+// Эта функция принимает таски, исполняет их в пуле и ждет, пока все таски не завершатся
+func (p *BatchWorkerPool) ExecuteBatch(tasks ...Task) {
+	ctx, cancel := context.WithCancel(context.Background())
+	resChan := make(chan struct{}, p.workers)
+	go func() {
+		defer cancel()
+		for tasksCount := len(tasks); tasksCount > 0; tasksCount-- {
+			<-resChan
+		}
+	}()
+
+	for _, task := range tasks {
+		p.msgChan <- WorkerMsg{
+			resChan: resChan,
+			task:    task,
+		}
+	}
+
+	<-ctx.Done()
 }

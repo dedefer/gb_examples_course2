@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option go_package = "lesson7/protobuf";
+
+message User {
+    string Username = 1;
+    string Password = 2;
+}
