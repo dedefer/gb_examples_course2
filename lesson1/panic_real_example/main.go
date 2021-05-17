@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"runtime"
 )
 
 var (
@@ -51,7 +52,9 @@ func process(file os.FileInfo) (err error) {
 	defer func() {
 		// ловим панику и присваиваем ошибку если была паника
 		if v := recover(); v != nil {
-			err = fmt.Errorf("panic: %w", v)
+			buff := make([]byte, 1024)
+			runtime.Stack(buff, false)
+			err = fmt.Errorf("panic: %w\n%s", v, buff)
 		}
 
 		if err != nil { // разблокируем файл при ошибке

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 )
 
 func makePanic() {
@@ -19,7 +20,9 @@ func callMakePanic() {
 
 func panicHandler() {
 	if v := recover(); v != nil {
-		fmt.Printf("panic with value: %v\n", v)
+		buff := make([]byte, 1024)
+		runtime.Stack(buff, false)
+		fmt.Printf("panic with value: %v, %s\n", v, buff)
 	}
 }
 
