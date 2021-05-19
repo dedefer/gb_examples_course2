@@ -13,29 +13,37 @@ var testData = [][]int{
 	{0},
 }
 
-func panicHandler() {
-	panicValue := recover()
-	if panicValue != nil {
-		trace := make([]byte, 1024)
-		runtime.Stack(trace, false)
-		fmt.Printf("PANIC: %v\n%s", panicValue, trace)
-	}
+func getStackTrace() string {
+	trace := make([]byte, 1024)
+	runtime.Stack(trace, false)
+	return string(trace)
 }
 
-func Avg(sequence []int) int {
-	defer panicHandler()
+func Avg(sequence []int) (avg int, err error) {
+
+	defer func() {
+		panicValue := recover()
+		if panicValue != nil {
+			fmt.Printf("PANIC: %v\n%s", panicValue, getStackTrace())
+			err = NewError(fmt.Sprintf("%v", panicValue))
+		}
+	}()
 
 	sum := 0
 	for _, elem := range sequence {
 		sum += elem
 	}
-	return sum / len(sequence)
+	return sum / len(sequence), nil
 }
 
 func main() {
 	for i, data := range testData {
-		avg := Avg(data)
-		fmt.Printf("test %d result: avg=%d\n", i, avg)
+		avg, err := Avg(data)
+		if err != nil {
+			fmt.Printf("test %d error: %s\n", i, err.Error())
+		} else {
+			fmt.Printf("test %d result: avg=%d\n", i, avg)
+		}
 	}
 	fmt.Println("all tests done")
 }
