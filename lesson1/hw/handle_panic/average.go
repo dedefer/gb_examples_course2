@@ -19,8 +19,17 @@ func getStackTrace() string {
 	return string(trace)
 }
 
-func Avg(sequence []int) (avg int, err error) {
+// Test function which can panic
+func Avg(sequence []int) int {
+	sum := 0
+	for _, elem := range sequence {
+		sum += elem
+	}
+	return sum / len(sequence)
+}
 
+//CalcAvg is wrapper to run Avg safelly
+func CalcAvg(sequence []int) (avg int, err error) {
 	defer func() {
 		panicValue := recover()
 		if panicValue != nil {
@@ -28,17 +37,13 @@ func Avg(sequence []int) (avg int, err error) {
 			err = NewError(fmt.Sprintf("%v", panicValue))
 		}
 	}()
-
-	sum := 0
-	for _, elem := range sequence {
-		sum += elem
-	}
-	return sum / len(sequence), nil
+	avg = Avg(sequence)
+	return avg, nil
 }
 
 func main() {
 	for i, data := range testData {
-		avg, err := Avg(data)
+		avg, err := CalcAvg(data)
 		if err != nil {
 			fmt.Printf("test %d error: %s\n", i, err.Error())
 		} else {
