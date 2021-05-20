@@ -1,6 +1,6 @@
 package main
 
-var arr = []int{}
+var arr = []int{1, 2, 3, 4}
 
 func bar(i int) int {
 	return arr[i]
